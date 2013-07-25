@@ -16,31 +16,32 @@ except Exception:
 
 
 setup(
-    name = 'chips',
+    name = 'chic',
     version = version,
-    description = 'Checks for Inputs, Protocols and Services',
+    description = 'CHecker for Items and Components',
     author = 'Pablo Saavedra',
     author_email = 'saavedra.pablo@gmail.com',
-    url = 'http://github.com/psaavedra/chips',
+    url = 'http://github.com/psaavedra/chic',
     packages = find_packages(),
     package_data={
     },
     scripts=[
-        "tools/chips-checker",
-        "tools/chips-get",
+        "tools/chic-checker",
+        "tools/chic-get",
     ],
     zip_safe=False,
     install_requires=[
         "httplib2",
-        "urllib2",
+        "urllib3",
+        "simplejson",
 
     ],
-    # data_files=[
-    #     ('/etc/', ['cfg/data.cfg']),
+    data_files=[
+        ('/usr/share/doc/chic/', ['cfg/chic-checker.cfg.example']),
     #     ('/etc/init.d', ['init-script'])
-    # ],
+    ],
 
-    download_url= 'https://github.com/psaavedra/chips/zipball/master',
+    download_url= 'https://github.com/psaavedra/chic/zipball/master',
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "License :: OSI Approved :: MIT License",
