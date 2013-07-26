@@ -113,7 +113,7 @@ _i = '''
 
 _t = '''
         <trigger>
-            <expression>{Template_Sources:stream[%(key)s].diff(0)}=1 | {Template_Sources:stream[%(key)s].str(Fail)}=1</expression>
+            <expression>{Template_Sources:stream[%(key)s].diff(0)}=1 | {Template_Sources:stream[%(key)s].str([Ok])}=0</expression>
             <name>%(key)s down on {HOST.NAME}</name>
             <url/>
             <status>0</status>

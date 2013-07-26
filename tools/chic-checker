@@ -395,11 +395,11 @@ def res_extra(res):
                 measure = round(res["size"] / float(res["quantity"]))
 
             res["ok"] = 1
-            res["status"] = "[%s] [%s] %s" % (status_name, measure, "Ok")
+            res["status"] = "[%s] [%s] [%s]" % ("Ok", status_name, measure)
             return
 
     res["ok"] = 0
-    res["status"] = "[%s] [-1] %s" % (status_name, "Fail")
+    res["status"] = "[%s] [-1] [%s]" % ("Fail", status_name)
 
 
 # main #########################################################################
