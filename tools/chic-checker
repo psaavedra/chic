@@ -146,6 +146,9 @@ chunkduration=30
               protocol = eval (cfg.get(s,o)) if o == 'protocol' else protocol
               quantity = eval (cfg.get(s,o)) if o == 'quantity' else quantity
 
+          logger.info ("Checking %s stream [protocol=%s uri=%s ip=%s port=%s chunkduration=%s quantity=%s]" \
+              % (key,protocol, uri, ip,port,chunkduration,quantity))
+
           if protocol == "udp":
             res[key] = check_udp(key,ip,port,chunkduration,quantity)
           if protocol == "http":
@@ -178,7 +181,7 @@ def check_hls(key,uri,chunkduration, quantity):
     dumpfilename = str(workdir) + '/dumps/' + str(key) + ".dump"
     
     try:
-        base_hls_url = uri.replace("playlist.m3u8","")
+        base_hls_url = uri.split("playlist.m3u8")[0]
     
         h = httplib2.Http()
         try:
@@ -197,7 +200,10 @@ def check_hls(key,uri,chunkduration, quantity):
             return res
         
         try:
-            streamlist=content.split(".m3u8")[0].split()[-1] + ".m3u8"
+            logger.debug("Content of %s URL: %s" % (uri,content))
+            for l in content.split("\n"):
+                if l.find(".m3u8") != -1:
+                    streamlist=l
             streamlist_url=base_hls_url+streamlist
             h = httplib2.Http()
             resp, content = h.request(streamlist_url, "GET")
@@ -215,14 +221,18 @@ def check_hls(key,uri,chunkduration, quantity):
             return res
     
     
-    
-        chunklist=content.split(".ts")[0].split()[-1] + ".ts"
+        logger.debug("Content of %s URL: %s" % (streamlist_url,content))
+        for l in content.split("\n"):
+                if l.find(".ts") != -1:
+                    chunklist=l
+
         chunklist_url=base_hls_url+chunklist
     
         http_f = urllib2.urlopen(chunklist_url,data=None,timeout=chunkduration)
     
         dumpfile = open(dumpfilename,"w+b")
-    
+        logger.debug("Content of %s URL dumped in %s file" \
+                % (chunklist_url,dumpfilename))
         c_time = time.time()
         max_time = c_time + chunkduration
         while c_time < max_time:
@@ -322,7 +332,7 @@ def check_udp(key, ip,port,chunkduration,quantity):
         # Allow multiple copies of this program on one machine
         # (not strictly needed)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    
+
         # Bind it to the ip:port
         s.bind((ip, port))
 
@@ -330,7 +340,7 @@ def check_udp(key, ip,port,chunkduration,quantity):
         s.settimeout(chunkduration)
 
         m = "Socket TIMEOUT: " + str(s.gettimeout())
-        logger.info(m)
+        logger.debug(m)
 
         group_bin = socket.inet_pton(addrinfo[0], addrinfo[4][0])
         # Join group
@@ -365,11 +375,10 @@ def check_udp(key, ip,port,chunkduration,quantity):
     except Exception, e:
         res["size"] = 0
         logger.error("Error checking %s key: %s" % (key,e))
-     
+
     res_extra(res)
     return res
 
-        
 
 def res_extra(res):
     status_name = "Undefined"
