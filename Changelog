@@ -7,4 +7,5 @@ Version 0.1.0
     Reponse format modified
     New tools: Zabbix template generator
     Fixed bugs on HLS parser
-
+Version 0.2.0
+    Memchache checker added

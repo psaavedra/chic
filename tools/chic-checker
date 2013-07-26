@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 # Author: Pablo Saavedra Rodinho
-# Contact: pablo.saavedra@interoud.com
+# Contact: pablo.saavedra@treitos.com
 
 """
 Save a group of streams from http or udp and generates a db with related info

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.1.0"
+version = "0.2.0"
 
 long_description = ""
 try:
@@ -29,12 +29,14 @@ setup(
         "tools/chic-checker",
         "tools/chic-get",
         "tools/chic-to-zabbix",
+        "tools/chic-memcache",
     ],
     zip_safe=False,
     install_requires=[
         "httplib2",
         "urllib3",
         "simplejson",
+        "python-memcached",
 
     ],
     data_files=[
