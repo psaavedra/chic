@@ -323,7 +323,7 @@ def check_udp(key, ip,port,chunkduration,threshold,db_json):
     res["threshold"] = threshold
     
     try:
-        dumpfilename = str(workdir) + '/dumps/' + key + "_" + str(ip) + "_" + str(port) + ".dump"
+        dumpfilename = str(workdir) + '/dumps/' + key + ".dump"
 
         # cmd = '''/usr/bin/udp-cat  %s:%s -timeout 5 > %s''' % \
         #    (ip, port, dumpfilename)
