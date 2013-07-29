@@ -111,6 +111,16 @@ protocol="udp"
 chunkduration=30
 
     '''
+    dbfilename = workdir + '/checks.db'
+    dbfilename_tmp = workdir + '/checks.db.tmp'
+
+    try:
+        dbfile = open(dbfilename)
+        db_json = json.load(dbfile)
+        dbfile.close()
+    except Exception:
+        db_json = None
+
     res = {}
 
     try:
@@ -129,7 +139,7 @@ chunkduration=30
           port = None
           chunkduration = 10
           protocol = None
-          quantity = 1
+          threshold = 1
           if s == 'global':
               for o in cfg.options(s):
                   try:
@@ -144,23 +154,21 @@ chunkduration=30
               port = eval (cfg.get(s,o)) if o == 'port' else port
               chunkduration = eval (cfg.get(s,o)) if o == 'chunkduration' else chunkduration
               protocol = eval (cfg.get(s,o)) if o == 'protocol' else protocol
-              quantity = eval (cfg.get(s,o)) if o == 'quantity' else quantity
+              threshold = eval (cfg.get(s,o)) if o == 'threshold' else threshold
 
-          logger.info ("Checking %s stream [protocol=%s uri=%s ip=%s port=%s chunkduration=%s quantity=%s]" \
-              % (key,protocol, uri, ip,port,chunkduration,quantity))
+          logger.info ("Checking %s stream [protocol=%s uri=%s ip=%s port=%s chunkduration=%s threshold=%s]" \
+              % (key,protocol, uri, ip,port,chunkduration,threshold))
 
           if protocol == "udp":
-            res[key] = check_udp(key,ip,port,chunkduration,quantity)
+            res[key] = check_udp(key,ip,port,chunkduration,threshold,db_json)
           if protocol == "http":
-            res[key] = check_http(key,uri,chunkduration,quantity)
+            res[key] = check_http(key,uri,chunkduration,threshold,db_json)
           if protocol == "hls":
-            res[key] = check_hls(key,uri,chunkduration,quantity)
+            res[key] = check_hls(key,uri,chunkduration,threshold,db_json)
 
-        except Exception, e:
+        except IOError, e:
           logger.error ("Problem on %s stream: %s" % (key,e))
 
-    dbfilename = workdir + '/checks.db'
-    dbfilename_tmp = workdir + '/checks.db.tmp'
     dbfile = open(dbfilename_tmp,"w+b")
     json.dump(res,dbfile)
     dbfile.flush()
@@ -169,14 +177,15 @@ chunkduration=30
         os.remove(dbfilename)
     os.rename(dbfilename_tmp, dbfilename)
 
-def check_hls(key,uri,chunkduration, quantity):
+def check_hls(key,uri,chunkduration, threshold, db_json):
     global workdir
     
     res = {}
+    res["key"] = key
     res["chunkduration"] = chunkduration
     res["uri"] = uri
     res["protocol"] = "hls"
-    res["quantity"] = quantity
+    res["threshold"] = threshold
     
     dumpfilename = str(workdir) + '/dumps/' + str(key) + ".dump"
     
@@ -256,17 +265,18 @@ def check_hls(key,uri,chunkduration, quantity):
         res["size"] = 0
         logger.error("Error checking %s key: %s" % (key,e))
      
-    res_extra(res)
+    res_extra(res, db_json)
     return res
 
-def check_http(key,uri,chunkduration,quantity):
+def check_http(key,uri,chunkduration,threshold,db_json):
     global workdir
     
     res = {}
+    res["key"] = key
     res["chunkduration"] = chunkduration
     res["uri"] = uri
     res["protocol"] = "http"
-    res["quantity"] = quantity
+    res["threshold"] = threshold
     
     dumpfilename = str(workdir) + '/dumps/' + str(key) + ".dump"
     
@@ -297,19 +307,20 @@ def check_http(key,uri,chunkduration,quantity):
         res["size"] = 0
         logger.error("Error checking %s key: %s" % (key,e))
      
-    res_extra(res)
+    res_extra(res,db_json)
     return res
 
 
-def check_udp(key, ip,port,chunkduration,quantity):
+def check_udp(key, ip,port,chunkduration,threshold,db_json):
     global workdir
     
     res = {}
+    res["key"] = key
     res["chunkduration"] = chunkduration
     res["ip"] = ip
     res["port"] = port
     res["protocol"] = "udp"
-    res["quantity"] = quantity
+    res["threshold"] = threshold
     
     try:
         dumpfilename = str(workdir) + '/dumps/' + key + "_" + str(ip) + "_" + str(port) + ".dump"
@@ -376,11 +387,13 @@ def check_udp(key, ip,port,chunkduration,quantity):
         res["size"] = 0
         logger.error("Error checking %s key: %s" % (key,e))
 
-    res_extra(res)
+    res_extra(res,db_json)
     return res
 
 
-def res_extra(res):
+def res_extra(res,db_json):
+    key = res["key"]
+
     status_name = "Undefined"
     if res.has_key("protocol") and \
        res["protocol"] == "udp" and \
@@ -395,20 +408,32 @@ def res_extra(res):
        res["protocol"] == "hls" and \
        res.has_key("uri"):
            status_name = "hls " + res["uri"]
-           
+
     if res.has_key("size"):
         if res["size"] != 0:
-        
-            measure = -1
-            if res.has_key("quantity"):
-                measure = round(res["size"] / float(res["quantity"]))
+            old_size = 0
+            try:
+                old_size = db_json[key]["size"]
+            except Exception:
+                logger.debug("No previous size found for %s key" % key)
+
+            measure = 0
+            if res.has_key("threshold"):
+                _diff = abs(res["size"] - old_size)
+                logger.debug ("Difference between current (%s) and old value (%s): %s" \
+                        % (res["size"], old_size, _diff))
+                if res["threshold"] < _diff:
+                    logger.debug("Threshold (%s) reached" % res["threshold"])
+                    measure = _diff
 
             res["ok"] = 1
-            res["status"] = "[%s] [%s] [%s]" % ("Ok", status_name, measure)
+            res["status"] = "[%s] [%s] [%s]" % ("Ok", measure, status_name)
+            logger.debug("New entry:  " + str(res))
             return
 
     res["ok"] = 0
     res["status"] = "[%s] [-1] [%s]" % ("Fail", status_name)
+    logger.debug("New entry:  " + str(res))
 
 
 # main #########################################################################
