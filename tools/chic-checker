@@ -170,7 +170,8 @@ chunkduration=30
           logger.error ("Problem on %s stream: %s" % (key,e))
 
     dbfile = open(dbfilename_tmp,"w+b")
-    json.dump(res,dbfile)
+    json.dump(res,dbfile, sort_keys=True, \
+        indent=4, separators=(',', ': '))
     dbfile.flush()
     dbfile.close()
     if os.path.isfile(dbfilename):
