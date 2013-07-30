@@ -187,9 +187,10 @@ def check_hls(key,uri,chunkduration, threshold, db_json):
     res["uri"] = uri
     res["protocol"] = "hls"
     res["threshold"] = threshold
-    
+
     dumpfilename = str(workdir) + '/dumps/' + str(key) + ".dump"
-    
+    res["dumpfile"] = dumpfilename
+
     try:
         base_hls_url = uri.split("playlist.m3u8")[0]
     
@@ -280,6 +281,7 @@ def check_http(key,uri,chunkduration,threshold,db_json):
     res["threshold"] = threshold
     
     dumpfilename = str(workdir) + '/dumps/' + str(key) + ".dump"
+    res["dumpfile"] = dumpfilename
     
     try:
         http_f = urllib2.urlopen(uri,data=None,timeout=chunkduration)
@@ -325,6 +327,7 @@ def check_udp(key, ip,port,chunkduration,threshold,db_json):
     
     try:
         dumpfilename = str(workdir) + '/dumps/' + key + ".dump"
+        res["dumpfile"] = dumpfilename
 
         # cmd = '''/usr/bin/udp-cat  %s:%s -timeout 5 > %s''' % \
         #    (ip, port, dumpfilename)
