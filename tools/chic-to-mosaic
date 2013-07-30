@@ -35,8 +35,6 @@ import httplib2
 
 DEV_NULL=open('/dev/null', "w")
 
-conffile = "./checker.cfg"
-
 logfile = "/dev/stdout"
 loglevel = 20
 workdir = "./checker/"
@@ -46,9 +44,6 @@ workdir = "./checker/"
 
 parser = OptionParser()
 
-parser.add_option("-f", "--file", dest="conffile",
-        help="The configuration file (default: %s)" % conffile,
-        default=conffile)
 parser.add_option("-w", "--workdir", dest="workdir", default=workdir,
         help="Work directory (default: %s)" % workdir)
 parser.add_option("-l", "--logfile",
@@ -59,7 +54,6 @@ parser.add_option("--loglevel",
         default=loglevel)
 (options, args) = parser.parse_args()
 
-conffile = options.conffile
 
 workdir = options.workdir
 logfile = options.logfile
@@ -106,22 +100,7 @@ if not os.path.isfile(frames_dir):
 
 
 def main():
-    global conffile
-    '''
-['key_http']
-uri="http://localhost:8082"
-protocol="http"
-chunkduration=30
-
-['key_udp']
-ip="127.0.0.1"
-port=1234
-protocol="udp"
-chunkduration=30
-
-    '''
     dbfilename = workdir + '/checks.db'
-    dbfilename_tmp = workdir + '/checks.db.tmp'
 
     try:
         dbfile = open(dbfilename)
@@ -130,72 +109,39 @@ chunkduration=30
     except Exception:
         db_json = None
 
-    res = {}
-
-    try:
-      # RawConfigParser not interpolate attribute values
-      cfg = ConfigParser.RawConfigParser()
-      cfg.readfp(file(conffile))
-
-    except Exception, e:
-        print ("Conffile %s error: %s" % (conffile,e))
-
-    for s in cfg.sections():
-        key = s
+    for key,value in db_json.iteritems():
         try:
-          uri = None
-          ip = None
-          port = None
-          chunkduration = 10
-          protocol = None
-          threshold = 1
-          mosaic = False
-          if s == 'global':
-              for o in cfg.options(s):
-                  try:
-                      vars()[o] = cfg.get(s,o)
-                  except Exception, e:
-                      print "Error parsing %s - %s: %s" % (s,o,e)
-              continue
-
-          for o in cfg.options(s):
-              uri = eval (cfg.get(s,o)) if o == 'uri' else uri
-              ip = eval (cfg.get(s,o)) if o == 'ip' else ip
-              port = eval (cfg.get(s,o)) if o == 'port' else port
-              chunkduration = eval (cfg.get(s,o)) if o == 'chunkduration' else chunkduration
-              protocol = eval (cfg.get(s,o)) if o == 'protocol' else protocol
-              threshold = eval (cfg.get(s,o)) if o == 'threshold' else threshold
-              mosaic = eval (cfg.get(s,o)) if o == 'mosaic' else mosaic
-
-          if mosaic == True:
-              logger.info ("Checking %s stream [protocol=%s uri=%s ip=%s port=%s chunkduration=%s threshold=%s]" \
-              % (key,protocol, uri, ip,port,chunkduration,threshold))
-              do_frames(key)
-
-        except IOError, e:
+            if value["mosaic"] == True:
+              logger.info ("Generating Frames")
+              do_frames(key, v["dumpfile"])
+        except Exception, e:
           logger.error ("Problem on %s stream: %s" % (key,e))
 
-    do_html()
+    do_html(db_json)
 
 
 
-def do_frames(key):
-    dumpfilename = str(workdir) + '/dumps/' + str(key) + ".dump"
-    frame_dir = frames_dir + key
+def do_frames(key,dumpfilename):
+    global frames_dir
+
+    frame_dir = frames_dir + "/" + key
     if not os.path.isfile(frame_dir):
         try:
             os.makedirs(frame_dir)
         except OSError, e:
             m = str(e)
-            logger.warning(m)
+            logger.debug(m)
 
     cmd="ffmpeg -loglevel quiet -i " + dumpfilename + " -r 1 " + frame_dir + "/img%1d.jpg  >/dev/null 2>&1"
     logger.debug("Command to execute: %s" % cmd)
     os.popen(cmd)
 
 
-def do_html():
-    html_file = workdir + "/index.html"
+def do_html(db_json):
+    global workdir
+    frames_dir = workdir + "/frames/"
+
+    html_file = workdir + "/mosaic.html"
     html_output = open (html_file, "w" )
 
     begin_header = "<html>\n<head>\n<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n"
@@ -217,19 +163,31 @@ def do_html():
     html_output.write(end_header)
     html_output.write(begin_body)
 
-    frames_dir = workdir + "/frames/"
-    for i in os.listdir(frames_dir):
-        l_frames = os.listdir(frames_dir + "/" + i)
-        l_frames.sort()
-        if l_frames == []:
-            abs_filename = "no_image_found"
+    for key,value in db_json.iteritems():
+        i = key
+
+        if not value["mosaic"]:
+            logger.debug("Skikping %s key because is marked as not in mosaic")
+            continue
+
+        if value["ok"]:
+            l_frames = os.listdir(frames_dir + "/" + i)
+            l_frames.sort()
+            if l_frames == []:
+                abs_filename = "no_image_found"
+                image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
+                html_output.write(image_code)
+            else:
+                filename=l_frames[len(l_frames)-1]
+                # abs_filename = os.path.abspath(frames_dir + "/" + i + "/" + filename)
+                abs_filename = "frames/" + i + "/" + filename
+                image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
+                html_output.write(image_code)
+        else: # mosaic = False
             image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
             html_output.write(image_code)
-        else:
-            filename=l_frames[len(l_frames)-1]
-            # abs_filename = os.path.abspath(frames_dir + "/" + i + "/" + filename)
-            abs_filename = "frames/" + i + "/" + filename
-            image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
+            _msg = "Check Failed!!!"
+            image_code="<div class=\"element\"> <span class=\"title\"> %s </span> %s </div>  \n" %(i, _msg)
             html_output.write(image_code)
 
     html_output.write(footer)
