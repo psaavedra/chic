@@ -208,14 +208,14 @@ def check_hls(key,uri,chunkduration, threshold, db_json):
         except Exception, e:
             res["size"] = 0
             logger.error("URI (%s) non available: %s" % (uri,e))
-            res_extra(res)
+            res_extra(res,db_json)
             return res
         
         status=resp["status"]
         if status != "200":
             res["size"] = 0
             logger.error("HTTP error on URI (%s): %s" % (uri,status))
-            res_extra(res)
+            res_extra(res,db_json)
             return res
         
         try:
@@ -229,14 +229,14 @@ def check_hls(key,uri,chunkduration, threshold, db_json):
         except Exception, e:
             res["size"] = 0
             logger.error("URI (%s) non available: %s" % (streamlist_url,e))
-            res_extra(res)
+            res_extra(res,db_json)
             return res
     
         status=resp["status"]
         if status!="200":
             res["size"] = 0
             logger.error("HTTP error on URI (%s): %s" % (uri,status))
-            res_extra(res)
+            res_extra(res,db_json)
             return res
     
     
