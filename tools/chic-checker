@@ -140,6 +140,7 @@ chunkduration=30
           chunkduration = 10
           protocol = None
           threshold = 1
+          mosaic = False
           if s == 'global':
               for o in cfg.options(s):
                   try:
@@ -155,6 +156,7 @@ chunkduration=30
               chunkduration = eval (cfg.get(s,o)) if o == 'chunkduration' else chunkduration
               protocol = eval (cfg.get(s,o)) if o == 'protocol' else protocol
               threshold = eval (cfg.get(s,o)) if o == 'threshold' else threshold
+              mosaic = eval (cfg.get(s,o)) if o == 'mosaic' else mosaic
 
           logger.info ("Checking %s stream [protocol=%s uri=%s ip=%s port=%s chunkduration=%s threshold=%s]" \
               % (key,protocol, uri, ip,port,chunkduration,threshold))
@@ -165,6 +167,12 @@ chunkduration=30
             res[key] = check_http(key,uri,chunkduration,threshold,db_json)
           if protocol == "hls":
             res[key] = check_hls(key,uri,chunkduration,threshold,db_json)
+
+          if mosaic == True:
+              logger.info ("Marked to generate mosaic")
+              res[key]["mosaic"] = True
+          else:
+              res[key]["mosaic"] = False
 
         except IOError, e:
           logger.error ("Problem on %s stream: %s" % (key,e))
