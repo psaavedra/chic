@@ -31,11 +31,11 @@ import urllib2
 
 DEV_NULL=open('/dev/null', "w")
 
-conffile = "./checker.cfg"
+conffile = "./chic.cfg"
 
 logfile = "/dev/stdout"
 loglevel = 20
-workdir = "./checker/"
+workdir = "./chic/"
 
 
 # command line options parser ##################################################
@@ -72,7 +72,7 @@ item = options.item
 import logging
 hdlr = logging.FileHandler(logfile)
 hdlr.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(message)s'))
-logger = logging.getLogger('fluunt')
+logger = logging.getLogger('chic')
 logger.addHandler(hdlr)
 logger.setLevel(int(loglevel))
 
