@@ -32,11 +32,12 @@ import httplib2
 
 DEV_NULL=open('/dev/null', "w")
 
-conffile = "./checker.cfg"
+conffile = "./chic.cfg"
 
 logfile = "/dev/stdout"
 loglevel = 20
-workdir = "./checker/"
+workdir = "./chic/"
+template_name = "Template_Sources"
 
 _template = '''<?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
@@ -49,8 +50,8 @@ _template = '''<?xml version="1.0" encoding="UTF-8"?>
     </groups>
     <templates>
         <template>
-            <template>Template_Sources</template>
-            <name>Template_Sources</name>
+            <template>%(template_name)s</template>
+            <name>%(template_name)s</name>
             <groups>
                 <group>
                     <name>Templates</name>
@@ -113,8 +114,21 @@ _i = '''
 
 _t = '''
         <trigger>
-            <expression>{Template_Sources:stream[%(key)s].diff(0)}=1 | {Template_Sources:stream[%(key)s].str([Ok])}=0</expression>
-            <name>%(key)s down on {HOST.NAME}</name>
+            <expression>{%(template_name)s:stream[%(key)s].diff(0)}=1 | {%(template_name)s:stream[%(key)s].str([Ok])}=0</expression>
+            <name>STREAM - %(key)s down on {HOST.NAME}</name>
+            <url/>
+            <status>0</status>
+            <priority>2</priority>
+            <description/>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+'''
+
+_t_dependent = '''
+        <trigger>
+            <expression>%(expression)s</expression>
+            <name>STREAM - Some source of %(template_name)s is down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
             <priority>4</priority>
@@ -123,6 +137,9 @@ _t = '''
             <dependencies/>
         </trigger>
 '''
+
+_t_dependent_expression = \
+        '''{%(template_name)s:stream[%(key)s].str([Ok])}=0'''
 
 
 # command line options parser ##################################################
@@ -138,20 +155,24 @@ parser.add_option("-l", "--logfile",
 parser.add_option("--loglevel",
         dest="loglevel", help="Log level (default: %s)" % loglevel,
         default=loglevel)
+parser.add_option("-t", "--template", dest="template_name",
+        help="Template name (default: %s)" % template_name,
+        default=template_name)
+
 (options, args) = parser.parse_args()
 
 conffile = options.conffile
 
 logfile = options.logfile
 loglevel = options.loglevel
-
+template_name = options.template_name
 
 
 # logging ######################################################################
 import logging
 hdlr = logging.FileHandler(logfile)
 hdlr.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(message)s'))
-logger = logging.getLogger('fluunt')
+logger = logging.getLogger('chic')
 logger.addHandler(hdlr)
 logger.setLevel(int(loglevel))
 
@@ -165,22 +186,7 @@ logger.info("Default encoding: %s" % sys.getdefaultencoding())
 
 def main():
     global conffile
-    '''
-['key_http']
-uri="http://localhost:8082"
-protocol="http"
-chunkduration=30
-quantity=100
-
-['key_udp']
-ip="127.0.0.1"
-port=1234
-protocol="udp"
-chunkduration=30
-quantity=1000
-    '''
-
-
+    global template_name
 
     res = {}
 
@@ -194,16 +200,11 @@ quantity=1000
 
     items = ""
     triggers = ""
-
+    _expr = ""
     for s in cfg.sections():
         key = s
         try:
-          uri = None
-          ip = None
-          port = None
-          chunkduration = 10
-          protocol = None
-          quantity = 1
+          trigger = True
           if s == 'global':
               for o in cfg.options(s):
                   try:
@@ -213,19 +214,23 @@ quantity=1000
               continue
 
           for o in cfg.options(s):
-              uri = eval (cfg.get(s,o)) if o == 'uri' else uri
-              ip = eval (cfg.get(s,o)) if o == 'ip' else ip
-              port = eval (cfg.get(s,o)) if o == 'port' else port
-              chunkduration = eval (cfg.get(s,o)) if o == 'chunkduration' else chunkduration
-              protocol = eval (cfg.get(s,o)) if o == 'protocol' else protocol
-              quantity = eval (cfg.get(s,o)) if o == 'quantity' else quantity
+              trigger = eval (cfg.get(s,o)) if o == 'trigger' else trigger
 
-          items += _i % {"key": key}
-          triggers += _t % {"key": key }
+          if trigger:
+              items += _i % {"key": key, "template_name":template_name}
+              triggers += _t % {"key": key, "template_name":template_name}
+              _expr += _t_dependent_expression % {"key": key, "template_name":template_name} + " | "
         except Exception, e:
           logger.error ("Problem on %s stream: %s" % (key,e))
 
-    print _template % {"items":items, "triggers":triggers}
+    if _expr and len(_expr)>3 and _expr[-3:] == " | ":
+            _expr = _expr[:-3]
+    triggers += _t_dependent % {
+            "expression": _expr,
+            "template_name": template_name}
+
+    print _template % {"items":items, "triggers":triggers,
+            "template_name":template_name}
 
 # main #########################################################################
 
