@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.3.0"
+version = "0.4.0"
 
 long_description = ""
 try:
@@ -29,6 +29,7 @@ setup(
         "tools/chic-checker",
         "tools/chic-get",
         "tools/chic-to-zabbix",
+        "tools/chic-to-mosaic",
         "tools/chic-memcache",
     ],
     zip_safe=False,
