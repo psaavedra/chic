@@ -37,8 +37,8 @@ DEV_NULL=open('/dev/null', "w")
 
 logfile = "/dev/stdout"
 loglevel = 20
-workdir = "./checker/"
-
+workdir = "./chic/"
+ffmpeg = "ffmpeg"
 
 # command line options parser ##################################################
 
@@ -52,19 +52,23 @@ parser.add_option("-l", "--logfile",
 parser.add_option("--loglevel",
         dest="loglevel", help="Log level (default: %s)" % loglevel,
         default=loglevel)
+parser.add_option("--ffmpeg",
+        dest="ffmpeg", help="FFmpeg binary path (default: %s)" % ffmpeg,
+        default=ffmpeg)
+
 (options, args) = parser.parse_args()
 
 
 workdir = options.workdir
 logfile = options.logfile
 loglevel = options.loglevel
-
+ffmpeg = options.ffmpeg
 
 # logging ######################################################################
 import logging
 hdlr = logging.FileHandler(logfile)
 hdlr.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(message)s'))
-logger = logging.getLogger('fluunt')
+logger = logging.getLogger('chic')
 logger.addHandler(hdlr)
 logger.setLevel(int(loglevel))
 
@@ -78,7 +82,7 @@ if not os.path.isfile(workdir):
         os.mkdir(workdir)
     except OSError, e:
         m = str(e)
-        logger.warning(m)
+        logger.debug(m)
 
 prefix = workdir + "/dumps/"
 if not os.path.isfile(prefix):
@@ -86,7 +90,7 @@ if not os.path.isfile(prefix):
         os.mkdir(prefix)
     except OSError, e:
         m = str(e)
-        logger.warning(m)
+        logger.debug(m)
 
 frames_dir = workdir + "/frames/"
 if not os.path.isfile(frames_dir):
@@ -94,7 +98,7 @@ if not os.path.isfile(frames_dir):
         os.mkdir(frames_dir)
     except OSError, e:
         m = str(e)
-        logger.warning(m)
+        logger.debug(m)
 
 ################################################################################
 
@@ -113,7 +117,8 @@ def main():
         try:
             if value["mosaic"] == True:
               logger.info ("Generating Frames")
-              do_frames(key, v["dumpfile"])
+              if value["ok"]:
+                  do_frames(key, value["dumpfile"])
         except Exception, e:
           logger.error ("Problem on %s stream: %s" % (key,e))
 
@@ -123,6 +128,7 @@ def main():
 
 def do_frames(key,dumpfilename):
     global frames_dir
+    global ffmpeg
 
     frame_dir = frames_dir + "/" + key
     if not os.path.isfile(frame_dir):
@@ -132,7 +138,7 @@ def do_frames(key,dumpfilename):
             m = str(e)
             logger.debug(m)
 
-    cmd="ffmpeg -loglevel quiet -i " + dumpfilename + " -r 1 " + frame_dir + "/img%1d.jpg  >/dev/null 2>&1"
+    cmd=ffmpeg + " -loglevel quiet -i " + dumpfilename + " -r 1 " + frame_dir + "/img%1d.jpg  >/dev/null 2>&1"
     logger.debug("Command to execute: %s" % cmd)
     os.popen(cmd)
 
@@ -146,10 +152,22 @@ def do_html(db_json):
 
     begin_header = "<html>\n<head>\n<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n"
     title ="<h3>Channel mosaic</h3>"
-    style1="<style type=\"text/css\">div#mosaic {}"
-    style2="div.element { float:left; height: 115px; margin:0; padding:0; width:150px; }"
-    style3="div.element span.title {color:#000; font-size:10px; align:center; }"
-    style4="div.element img { height:100px; width:150px; } </style>"
+    style1="<style type=\"text/css\">div#mosaic {}\n"
+    style2="div.element { float:left; height: 115px; margin:0; padding:0; width:150px; }\n"
+    style3="div.element span.title {color:#000; font-size:10px; align:center; }\n"
+    style4="div.element img { height:100px; width:150px; }\n"
+    style5='''\
+div.element div.noimage {
+    width:100px;
+    height:60px;
+    text-align:center;
+    margin:0 auto;
+    color:#F33;
+    font-weight:bold;
+    line-height:90px;
+}
+'''
+    style6="</style>\n"
     end_header="</head>"
     begin_body="<body> <div id=\"mosaic\">"
     footer = "</div> </body> </html>"
@@ -160,6 +178,8 @@ def do_html(db_json):
     html_output.write(style2)
     html_output.write(style3)
     html_output.write(style4)
+    html_output.write(style5)
+    html_output.write(style6)
     html_output.write(end_header)
     html_output.write(begin_body)
 
@@ -186,8 +206,8 @@ def do_html(db_json):
         else: # mosaic = False
             image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
             html_output.write(image_code)
-            _msg = "Check Failed!!!"
-            image_code="<div class=\"element\"> <span class=\"title\"> %s </span> %s </div>  \n" %(i, _msg)
+            _msg = "No input"
+            image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <div class=\"noimage\">%s</div> </div>  \n" %(i, _msg)
             html_output.write(image_code)
 
     html_output.write(footer)
