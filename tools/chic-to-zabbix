@@ -116,15 +116,29 @@ _i = '''
 _t = '''
         <trigger>
             <expression>{%(template_name)s:%(check_name)s[%(key)s].diff(0)}=1 | {%(template_name)s:%(check_name)s[%(key)s].str([Ok])}=0</expression>
-            <name>STREAM - %(key)s down on {HOST.NAME}</name>
+            <name>STREAM - %(key)s down of %(template_name)s on {HOST.NAME}</name>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>%(priority)s</priority>
             <description/>
             <type>0</type>
             <dependencies/>
         </trigger>
 '''
+
+_t2 = '''
+        <trigger>
+            <expression>{%(template_name)s:%(check_name)s[%(key)s].diff(0)}=1</expression>
+            <name>STREAM - Some source down of %(template_name)s on {HOST.NAME}</name>
+            <url/>
+            <status>0</status>
+            <priority>%(priority)s</priority>
+            <description/>
+            <type>0</type>
+            <dependencies/>
+        </trigger>
+'''
+
 
 
 # command line options parser ##################################################
@@ -189,6 +203,18 @@ def main():
 
     items = ""
     triggers = ""
+
+    items += _i % {
+        "key": "all",
+        "template_name":template_name,
+        "check_name":check_name,
+    }
+    triggers += _t2 % {
+        "key": "all",
+        "template_name":template_name,
+        "check_name":check_name,
+        "priority":4,
+    }
     for s in cfg.sections():
         key = s
         try:
@@ -214,6 +240,7 @@ def main():
                           "key": key,
                           "template_name":template_name,
                           "check_name":check_name,
+                          "priority":2,
                       }
         except Exception, e:
           logger.error ("Problem on %s key: %s" % (key,e))

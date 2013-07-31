@@ -99,7 +99,7 @@ def main():
     db = json.load(dbfile)
     dbfile.close()
 
-    if all_:
+    if all_ or item=="all":
         res = 0
         for k,v in db.iteritems():
             try:

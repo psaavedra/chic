@@ -23,3 +23,5 @@ Version 0.4.1
 Version 0.5.0
     Removed Trigger composed by OR
     Added --all on chic-get
+Version 0.5.1
+    Added magic item 'all'
