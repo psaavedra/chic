@@ -126,22 +126,6 @@ _t = '''
         </trigger>
 '''
 
-_t_dependent = '''
-        <trigger>
-            <expression>%(expression)s</expression>
-            <name>STREAM - Some source of %(template_name)s is down on {HOST.NAME}</name>
-            <url/>
-            <status>0</status>
-            <priority>4</priority>
-            <description/>
-            <type>0</type>
-            <dependencies/>
-        </trigger>
-'''
-
-_t_dependent_expression = \
-        '''{%(template_name)s:%(check_name)s[%(key)s].str([Ok])}=0'''
-
 
 # command line options parser ##################################################
 
@@ -205,7 +189,6 @@ def main():
 
     items = ""
     triggers = ""
-    _expr = ""
     for s in cfg.sections():
         key = s
         try:
@@ -232,21 +215,8 @@ def main():
                           "template_name":template_name,
                           "check_name":check_name,
                       }
-              _expr += _t_dependent_expression % {
-                          "key": key,
-                          "template_name":template_name,
-                          "check_name":check_name,
-                      } + " | "
         except Exception, e:
           logger.error ("Problem on %s key: %s" % (key,e))
-
-    if _expr and len(_expr)>3 and _expr[-3:] == " | ":
-            _expr = _expr[:-3]
-    triggers += _t_dependent % {
-            "expression": _expr,
-            "template_name": template_name,
-            "check_name":check_name,
-            }
 
     print _template % {
             "items":items,

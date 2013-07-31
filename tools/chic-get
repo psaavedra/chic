@@ -36,7 +36,7 @@ conffile = "./chic.cfg"
 logfile = "/dev/stdout"
 loglevel = 20
 workdir = "./chic/"
-
+all_ = False
 
 # command line options parser ##################################################
 
@@ -53,6 +53,10 @@ parser.add_option("-k", "--key",
 parser.add_option("-i", "--item",
         dest="item", help="Log file (default: %s)" % "item",
         default="item")
+parser.add_option("--all", action="store_true", dest="all_",
+        help="Check all",
+        default=all_)
+
 
 
 parser.add_option("--loglevel",
@@ -65,7 +69,7 @@ logfile = options.logfile
 loglevel = options.loglevel
 key = options.key
 item = options.item
-
+all_ = options.all_
 
 
 # logging ######################################################################
@@ -87,31 +91,30 @@ logger.info("Default encoding: %s" % sys.getdefaultencoding())
 
 def main():
     global conffile
-    '''
-[key_http]
-uri="http://localhost:8082"
-protocol="http"
-chunkduration=30
+    global item
+    global all_
 
-[key_udp]
-ip="127.0.0.1"
-port=1234
-protocol="udp"
-chunkduration=30
-
-    '''
     dbfilename = workdir + '/checks.db'
     dbfile = open(dbfilename)
     db = json.load(dbfile)
     dbfile.close()
 
-    try:
+    if all_:
+        res = 0
+        for k,v in db.iteritems():
+            try:
+              res += v["ok"]
+            except Exception:
+              pass
+        print res
+    else:
+      try:
         k = db[key]
         try:
             print k[item]
         except:
             print "ERROR: No item found"
-    except:
+      except:
         print "ERROR: No key found"
 
 # main #########################################################################
