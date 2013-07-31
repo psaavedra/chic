@@ -38,6 +38,7 @@ logfile = "/dev/stdout"
 loglevel = 20
 workdir = "./chic/"
 template_name = "Template_Sources"
+check_name = "stream"
 
 _template = '''<?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
@@ -76,12 +77,12 @@ _template = '''<?xml version="1.0" encoding="UTF-8"?>
 
 _i = '''
                 <item>
-                    <name>stream $1</name>
+                    <name>%(check_name)s $1</name>
                     <type>0</type>
                     <snmp_community/>
                     <multiplier>0</multiplier>
                     <snmp_oid/>
-                    <key>stream[%(key)s]</key>
+                    <key>%(check_name)s[%(key)s]</key>
                     <delay>180</delay>
                     <history>90</history>
                     <trends>365</trends>
@@ -114,7 +115,7 @@ _i = '''
 
 _t = '''
         <trigger>
-            <expression>{%(template_name)s:stream[%(key)s].diff(0)}=1 | {%(template_name)s:stream[%(key)s].str([Ok])}=0</expression>
+            <expression>{%(template_name)s:%(check_name)s[%(key)s].diff(0)}=1 | {%(template_name)s:%(check_name)s[%(key)s].str([Ok])}=0</expression>
             <name>STREAM - %(key)s down on {HOST.NAME}</name>
             <url/>
             <status>0</status>
@@ -139,7 +140,7 @@ _t_dependent = '''
 '''
 
 _t_dependent_expression = \
-        '''{%(template_name)s:stream[%(key)s].str([Ok])}=0'''
+        '''{%(template_name)s:%(check_name)s[%(key)s].str([Ok])}=0'''
 
 
 # command line options parser ##################################################
@@ -158,6 +159,10 @@ parser.add_option("--loglevel",
 parser.add_option("-t", "--template", dest="template_name",
         help="Template name (default: %s)" % template_name,
         default=template_name)
+parser.add_option("-c", "--check", dest="check_name",
+        help="Zabbix custmon check name (default: %s)" % check_name,
+        default=check_name)
+
 
 (options, args) = parser.parse_args()
 
@@ -166,7 +171,7 @@ conffile = options.conffile
 logfile = options.logfile
 loglevel = options.loglevel
 template_name = options.template_name
-
+check_name = options.check_name
 
 # logging ######################################################################
 import logging
@@ -217,20 +222,38 @@ def main():
               trigger = eval (cfg.get(s,o)) if o == 'trigger' else trigger
 
           if trigger:
-              items += _i % {"key": key, "template_name":template_name}
-              triggers += _t % {"key": key, "template_name":template_name}
-              _expr += _t_dependent_expression % {"key": key, "template_name":template_name} + " | "
+              items += _i % {
+                          "key": key,
+                          "template_name":template_name,
+                          "check_name":check_name,
+                      }
+              triggers += _t % {
+                          "key": key,
+                          "template_name":template_name,
+                          "check_name":check_name,
+                      }
+              _expr += _t_dependent_expression % {
+                          "key": key,
+                          "template_name":template_name,
+                          "check_name":check_name,
+                      } + " | "
         except Exception, e:
-          logger.error ("Problem on %s stream: %s" % (key,e))
+          logger.error ("Problem on %s key: %s" % (key,e))
 
     if _expr and len(_expr)>3 and _expr[-3:] == " | ":
             _expr = _expr[:-3]
     triggers += _t_dependent % {
             "expression": _expr,
-            "template_name": template_name}
+            "template_name": template_name,
+            "check_name":check_name,
+            }
 
-    print _template % {"items":items, "triggers":triggers,
-            "template_name":template_name}
+    print _template % {
+            "items":items,
+            "triggers":triggers,
+            "template_name":template_name,
+            "check_name":check_name,
+            }
 
 # main #########################################################################
 

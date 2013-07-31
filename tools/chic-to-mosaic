@@ -38,6 +38,7 @@ DEV_NULL=open('/dev/null', "w")
 logfile = "/dev/stdout"
 loglevel = 20
 workdir = "./chic/"
+outputdir = workdir
 ffmpeg = "ffmpeg"
 
 # command line options parser ##################################################
@@ -46,6 +47,9 @@ parser = OptionParser()
 
 parser.add_option("-w", "--workdir", dest="workdir", default=workdir,
         help="Work directory (default: %s)" % workdir)
+parser.add_option("-o", "--outputdir", dest="outputdir", default=outputdir,
+        help="Output directory (default: %s)" % outputdir)
+
 parser.add_option("-l", "--logfile",
         dest="logfile", help="Log file (default: %s)" % logfile,
         default=logfile)
@@ -63,6 +67,7 @@ workdir = options.workdir
 logfile = options.logfile
 loglevel = options.loglevel
 ffmpeg = options.ffmpeg
+outputdir = options.outputdir
 
 # logging ######################################################################
 import logging
@@ -77,22 +82,7 @@ logger.setLevel(int(loglevel))
 
 logger.info("Default encoding: %s" % sys.getdefaultencoding())
 
-if not os.path.isfile(workdir):
-    try:
-        os.mkdir(workdir)
-    except OSError, e:
-        m = str(e)
-        logger.debug(m)
-
-prefix = workdir + "/dumps/"
-if not os.path.isfile(prefix):
-    try:
-        os.mkdir(prefix)
-    except OSError, e:
-        m = str(e)
-        logger.debug(m)
-
-frames_dir = workdir + "/frames/"
+frames_dir = outputdir + "/frames/"
 if not os.path.isfile(frames_dir):
     try:
         os.mkdir(frames_dir)
@@ -130,24 +120,25 @@ def do_frames(key,dumpfilename):
     global frames_dir
     global ffmpeg
 
-    frame_dir = frames_dir + "/" + key
-    if not os.path.isfile(frame_dir):
+    key_frames_dir = frames_dir + "/" + key
+    if not os.path.isfile(key_frames_dir):
         try:
-            os.makedirs(frame_dir)
+            os.makedirs(key_frames_dir)
         except OSError, e:
             m = str(e)
             logger.debug(m)
 
-    cmd=ffmpeg + " -loglevel quiet -i " + dumpfilename + " -r 1 " + frame_dir + "/img%1d.jpg  >/dev/null 2>&1"
+    cmd=ffmpeg + " -loglevel quiet -i " + dumpfilename + " -r 1 " \
+            + key_frames_dir + "/img%1d.jpg  >/dev/null 2>&1"
     logger.debug("Command to execute: %s" % cmd)
     os.popen(cmd)
 
 
 def do_html(db_json):
-    global workdir
-    frames_dir = workdir + "/frames/"
+    global outputdir
+    global frames_dir
 
-    html_file = workdir + "/mosaic.html"
+    html_file = outputdir + "/mosaic.html"
     html_output = open (html_file, "w" )
 
     begin_header = "<html>\n<head>\n<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n"
@@ -194,17 +185,16 @@ div.element div.noimage {
             l_frames = os.listdir(frames_dir + "/" + i)
             l_frames.sort()
             if l_frames == []:
-                abs_filename = "no_image_found"
-                image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
+                img_relative_path = "no_image_found"
+                image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, img_relative_path,i,i)
                 html_output.write(image_code)
             else:
                 filename=l_frames[len(l_frames)-1]
-                # abs_filename = os.path.abspath(frames_dir + "/" + i + "/" + filename)
-                abs_filename = "frames/" + i + "/" + filename
-                image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
+                img_relative_path = "frames/" + i + "/" + filename
+                image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, img_relative_path,i,i)
                 html_output.write(image_code)
         else: # mosaic = False
-            image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, abs_filename,i,i)
+            image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <img src=%s alt=Channel %s title=%s width=\"150\" height=\"100\" > </div>  \n" %(i, img_relative_path,i,i)
             html_output.write(image_code)
             _msg = "No input"
             image_code="<div class=\"element\"> <span class=\"title\"> %s </span> <div class=\"noimage\">%s</div> </div>  \n" %(i, _msg)

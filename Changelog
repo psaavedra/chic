@@ -17,3 +17,6 @@ Version 0.4.0
     Trigger for some channels can be omitted
     New trigger OR for all key with trigger=True
     Default values changed
+Version 0.4.1
+    Added output dir to chic-to-mosaic
+    Added Zabbix check name to chic-to-zabbix
