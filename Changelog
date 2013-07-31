@@ -25,3 +25,6 @@ Version 0.5.0
     Added --all on chic-get
 Version 0.5.1
     Added magic item 'all'
+Version 0.5.2
+    Removed magic item 'all'
+    Added magic key 'all'
