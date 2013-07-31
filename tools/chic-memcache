@@ -49,7 +49,7 @@ port = options.port
 import logging
 hdlr = logging.FileHandler(logfile)
 hdlr.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(message)s'))
-logger = logging.getLogger('fluunt')
+logger = logging.getLogger('chic')
 logger.addHandler(hdlr)
 logger.setLevel(int(loglevel))
 
