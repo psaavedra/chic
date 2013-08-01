@@ -10,8 +10,10 @@ Check a remote memcache server
 """
 from optparse import OptionParser
 
+import pprint
 import memcache
 import random
+import simplejson as json
 
 DEV_NULL=open('/dev/null', "w")
 
@@ -19,11 +21,15 @@ logfile = "/dev/stdout"
 loglevel = 20
 ip = "127.0.0.1"
 port = "11211"
-
+key = "key"
 # command line options parser ##################################################
 
 parser = OptionParser()
 
+
+parser.add_option("-k", "--key", dest="key",
+        help="Key (default: %s)" % key,
+        default=key)
 parser.add_option("-i", "--ip", dest="ip",
         help="Memcache IP (default: %s)" % ip,
         default=ip)
@@ -43,7 +49,7 @@ logfile = options.logfile
 loglevel = options.loglevel
 ip = options.ip
 port = options.port
-
+key = options.key
 
 # logging ######################################################################
 import logging
@@ -55,19 +61,15 @@ logger.setLevel(int(loglevel))
 
 
 # setting up ###################################################################
-
 try:
     mc = memcache.Client([ip + ':' + port], debug=0)
-    key = "testkey_" + str(random.randint(0,1000000000000000))
-
-    mc.set(key, key)
     value = mc.get(key)
-    mc.delete(key)
-
-    if value == key:
-        print "Ok"
-    else:
-        print "Fail"
+    try:
+        value = json.loads(value)
+    except:
+        pass
+    pp = pprint.PrettyPrinter(indent=0)
+    pp.pprint(value)
 except Exception, e:
     print "Fail: %s" % e
 
