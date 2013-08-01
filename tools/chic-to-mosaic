@@ -128,7 +128,7 @@ def do_frames(key,dumpfilename):
             m = str(e)
             logger.debug(m)
 
-    cmd=ffmpeg + " -loglevel quiet -i " + dumpfilename + " -r 1 " \
+    cmd=ffmpeg + " -loglevel quiet -i " + dumpfilename + " -r 1 -vf select=\"eq(pict_type\,I)\" " \
             + key_frames_dir + "/img%1d.jpg  >/dev/null 2>&1"
     logger.debug("Command to execute: %s" % cmd)
     os.popen(cmd)
