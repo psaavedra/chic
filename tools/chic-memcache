@@ -60,7 +60,7 @@ try:
     mc = memcache.Client([ip + ':' + port], debug=0)
     key = "testkey_" + str(random.randint(0,1000000000000000))
 
-    mc.set(key, key)
+    mc.set(key, key, 30)
     value = mc.get(key)
     mc.delete(key)
 
