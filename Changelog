@@ -28,3 +28,6 @@ Version 0.5.1
 Version 0.5.2
     Removed magic item 'all'
     Added magic key 'all'
+Version 0.6.0
+    New checks for memcached
+    Modifcations on mosaic generation

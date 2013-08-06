@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.5.2"
+version = "0.6.0"
 
 long_description = ""
 try:
@@ -31,6 +31,8 @@ setup(
         "tools/chic-to-zabbix",
         "tools/chic-to-mosaic",
         "tools/chic-memcache",
+        "tools/chic-memcache-get",
+        "tools/chic-memcache-stats",
     ],
     zip_safe=False,
     install_requires=[
