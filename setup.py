@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.6.0"
+version = "0.7.0"
 
 long_description = ""
 try:
@@ -33,6 +33,7 @@ setup(
         "tools/chic-memcache",
         "tools/chic-memcache-get",
         "tools/chic-memcache-stats",
+        "tools/chic-snmp-trap",
     ],
     zip_safe=False,
     install_requires=[
@@ -44,6 +45,7 @@ setup(
     ],
     data_files=[
         ('/usr/share/doc/chic/', ['cfg/chic-checker.cfg.example']),
+        ('/usr/share/doc/chic/', ['cfg/chic-snmp-trap.cfg.example']),
     #     ('/etc/init.d', ['init-script'])
     ],
 
@@ -58,5 +60,5 @@ setup(
     ],
     long_description=long_description,
     license=license,
-    keywords = "python check streaming udp sources",
+    keywords = "python check streaming udp sources snmp trap",
 )
