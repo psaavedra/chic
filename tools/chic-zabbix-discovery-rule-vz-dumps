@@ -80,9 +80,11 @@ def main():
       files = os.listdir(workdir)
       for f in files:
         if f.endswith(suffix):
-          _,_,_id,_date,_ = f.split("-")
+          _vzdump,_openvz,_id,_date,_hourandextension = f.split("-")
           _d = {}
           _d["{#VZDUMPFILE}"]=workdir + "/" + f
+          _d["{#VZDUMPFILE2}"]=workdir + "/" + _vzdump + "-" + _openvz + \
+"-"  + _id + "-" + "*" + _hourandextension.split(".")[-1]
           # _d["{#VZDUMPFILE}"]=_d["{#VZDUMPFILE}"].replace("/","\/")
           _d["{#VZDUMPID}"]=_id
           res["data"].append(_d)
