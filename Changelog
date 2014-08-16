@@ -31,3 +31,6 @@ Version 0.5.2
 Version 0.6.0
     New checks for memcached
     Modifcations on mosaic generation
+Version 0.7.0
+    Added chic-zabbix-discovery-rule-files
+    Added chic-zabbix-discovery-rule-vz-dumps
