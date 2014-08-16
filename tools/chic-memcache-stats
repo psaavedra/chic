@@ -10,8 +10,11 @@ Check a remote memcache server
 """
 from optparse import OptionParser
 
+import sys
+import pprint
 import memcache
 import random
+import simplejson as json
 
 DEV_NULL=open('/dev/null', "w")
 
@@ -19,11 +22,18 @@ logfile = "/dev/stdout"
 loglevel = 20
 ip = "127.0.0.1"
 port = "11211"
+key = "key"
+all_ = False
+list_ = False
 
 # command line options parser ##################################################
 
 parser = OptionParser()
 
+
+parser.add_option("-k", "--key", dest="key",
+        help="Key (default: %s)" % key,
+        default=key)
 parser.add_option("-i", "--ip", dest="ip",
         help="Memcache IP (default: %s)" % ip,
         default=ip)
@@ -36,6 +46,15 @@ parser.add_option("-l", "--logfile",
 parser.add_option("--loglevel",
         dest="loglevel", help="Log level (default: %s)" % loglevel,
         default=loglevel)
+parser.add_option("--all", action="store_true", dest="all_",
+        help="Check all",
+        default=all_)
+parser.add_option("--list", action="store_true", dest="list_",
+        help="List available stats keynames",
+        default=list_)
+
+
+
 (options, args) = parser.parse_args()
 
 
@@ -43,7 +62,9 @@ logfile = options.logfile
 loglevel = options.loglevel
 ip = options.ip
 port = options.port
-
+key = options.key
+all_ = options.all_
+list_ = options.list_
 
 # logging ######################################################################
 import logging
@@ -55,19 +76,24 @@ logger.setLevel(int(loglevel))
 
 
 # setting up ###################################################################
-
 try:
     mc = memcache.Client([ip + ':' + port], debug=0)
-    key = "testkey_" + str(random.randint(0,1000000000000000))
+    _s = mc.get_stats()
 
-    mc.set(key, key, 30)
-    value = mc.get(key)
-    mc.delete(key)
+    if list_:
+        keys = _s[0][1].keys()
+        keys.sort()
+        for k in keys:
+            print k
+        sys.exit(0)
 
-    if value == key:
-        print "Ok"
+    pp = pprint.PrettyPrinter(indent=0)
+    if all_:
+        pp.pprint(_s[0][1])
     else:
-        print "Fail"
+        print(_s[0][1][key])
+
+
 except Exception, e:
     print "Fail: %s" % e
 
