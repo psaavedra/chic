@@ -31,14 +31,11 @@ setup(
         "tools/chic-to-zabbix",
         "tools/chic-to-mosaic",
         "tools/chic-memcache",
-<<<<<<< Updated upstream
         "tools/chic-memcache-get",
         "tools/chic-memcache-stats",
         "tools/chic-snmp-trap",
-=======
         "tools/chic-zabbix-discovery-rule-vz-dumps",
         "tools/chic-zabbix-discovery-rule-files",
->>>>>>> Stashed changes
     ],
     zip_safe=False,
     install_requires=[
