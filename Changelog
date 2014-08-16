@@ -34,3 +34,5 @@ Version 0.6.0
 Version 0.7.1
     Added chic-zabbix-discovery-rule-files
     Added chic-zabbix-discovery-rule-vz-dumps
+Version 0.8.0
+    Added chic-vz-update-network-details
