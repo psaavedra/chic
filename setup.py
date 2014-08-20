@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.8.1"
+version = "0.9.0"
 
 long_description = ""
 try:
@@ -36,6 +36,7 @@ setup(
         "tools/chic-snmp-trap",
         "tools/chic-zabbix-discovery-rule-vz-dumps",
         "tools/chic-zabbix-discovery-rule-files",
+        "tools/chic-zabbix-discovery-rule-streams",
         "tools/chic-vz-update-network-details",
     ],
     zip_safe=False,

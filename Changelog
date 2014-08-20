@@ -38,3 +38,5 @@ Version 0.8.0
     Added chic-vz-update-network-details
 Version 0.8.1
     Added new attribute to the stdout output
+Version 0.9.0
+    Added chic-zabbix-discovery-rule-streams
