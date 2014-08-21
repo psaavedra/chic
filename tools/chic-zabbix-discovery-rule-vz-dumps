@@ -76,6 +76,8 @@ logger.info("Default encoding: %s" % sys.getdefaultencoding())
 def main():
     global workdir
     res = {"data":[]}
+    VZDUMPFILE2_list  = []
+
     try:
       files = os.listdir(workdir)
       for f in files:
@@ -87,7 +89,10 @@ def main():
 "-"  + _id + "-" + "*" + _hourandextension.split(".")[-1]
           # _d["{#VZDUMPFILE}"]=_d["{#VZDUMPFILE}"].replace("/","\/")
           _d["{#VZDUMPID}"]=_id
-          res["data"].append(_d)
+
+          if VZDUMPFILE2_list.count(_d["{#VZDUMPFILE2}"]) == 0:
+              res["data"].append(_d)
+              VZDUMPFILE2_list.append(_d["{#VZDUMPFILE2}"])
     except Exception, e:
         logger.error("Raised exception: %s" % e)
     print json.dumps(res)
