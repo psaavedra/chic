@@ -95,7 +95,7 @@ def channels_views(conn):
 
 	for row in rows:
 		_r = {}
-		_r["{#CHANNELNANE}"] = row[0]
+		_r["{#CHANNELNAME}"] = row[0]
 		_r["{#COUNTEVENTS}"] = row[1]
 		res["data"].append(_r)
 
