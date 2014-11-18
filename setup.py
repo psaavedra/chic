@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.12.4"
+version = "0.13.0"
 
 long_description = ""
 try:
@@ -39,6 +39,8 @@ setup(
         "tools/chic-zabbix-discovery-rule-streams",
         "tools/chic-zabbix-discovery-rule-epg-channels",
         "tools/chic-vz-update-network-details",
+        "tools/chic-epg-count-events",
+        "tools/chic-epg-get-timeholes",
     ],
     zip_safe=False,
     install_requires=[
