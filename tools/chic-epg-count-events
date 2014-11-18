@@ -80,8 +80,7 @@ dbname = options.dbname
 if len(args) == 1:
 	channelid = args[0]
 else:
-	print 'You must enter an id'
-	sys.exit(0)
+    channelid = None
 
 # logging ######################################################################
 import logging
@@ -96,17 +95,21 @@ logger.info("Default encoding: %s" % sys.getdefaultencoding())
 
 ################################################################################
 def channels_views(conn):
-        #conn.set_isolation_level(0)
-        cur = conn.cursor()
+    #conn.set_isolation_level(0)
+    cur = conn.cursor()
 
+    query = None
+    if channelid:
         query = "SELECT count (distinct id)\
-                 FROM aka_aka_vodkatv_epg_event\
-                 WHERE channel_id = '%s';" % channelid
+                FROM aka_aka_vodkatv_epg_event\
+                WHERE channel_id = '%s';" % channelid
+    else:
+        query = "SELECT count (distinct id)\
+                FROM aka_aka_vodkatv_epg_event;"
+    cur.execute(query)
+    rows = cur.fetchall()
 
-	cur.execute(query)
-	rows = cur.fetchall()
-
-	print rows[0][0]
+    print rows[0][0]
 
 def main():
         try:
