@@ -88,15 +88,17 @@ def channels_views(conn):
         #conn.set_isolation_level(0)
         res = {"data":[]}
         cur = conn.cursor()
-        query = " SELECT channel_name, count (distinct id) \
-	from aka_aka_vodkatv_epg_event group by channel_name;"
+        query = " SELECT channel_id, channel_identifier, channel_name, count (distinct id) \
+	from aka_aka_vodkatv_epg_event group by channel_id, channel_identifier, channel_name;"
 	cur.execute(query)
 	rows = cur.fetchall()
 
 	for row in rows:
 		_r = {}
-		_r["{#CHANNELNAME}"] = row[0]
-		_r["{#COUNTEVENTS}"] = row[1]
+		_r["{#CHANNEL_ID}"] = row[0]
+		_r["{#CHANNEL_EXTERNAL_ID}"] = row[1]
+		_r["{#CHANNEL_NAME}"] = row[2]
+		_r["{#COUNT_EVENTS}"] = row[3]
 		res["data"].append(_r)
 
 	print json.dumps(res)
