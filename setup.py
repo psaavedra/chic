@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.14.2"
+version = "0.15.0"
 
 long_description = ""
 try:
@@ -48,7 +48,7 @@ setup(
         "urllib3",
         "simplejson",
         "python-memcached",
-
+        "python-slugify",
     ],
     data_files=[
         ('/usr/share/doc/chic/', ['cfg/chic-checker.cfg.example']),

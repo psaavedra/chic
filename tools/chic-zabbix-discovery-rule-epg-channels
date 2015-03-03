@@ -13,6 +13,7 @@ from optparse import OptionParser
 import os
 import sys
 import subprocess
+import slugify
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -95,9 +96,9 @@ def channels_views(conn):
 
 	for row in rows:
 		_r = {}
-		_r["{#CHANNEL_ID}"] = row[0]
-		_r["{#CHANNEL_EXTERNAL_ID}"] = row[1]
-		_r["{#CHANNEL_NAME}"] = row[2]
+		_r["{#CHANNEL_ID}"] = slugify.slugify(row[0])
+		_r["{#CHANNEL_EXTERNAL_ID}"] = slugify.slugify(row[1])
+		_r["{#CHANNEL_NAME}"] = slugify.slugify(row[2])
 		_r["{#COUNT_EVENTS}"] = row[3]
 		res["data"].append(_r)
 
